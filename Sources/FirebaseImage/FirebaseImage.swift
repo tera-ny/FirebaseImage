@@ -4,6 +4,8 @@ import FirebaseStorage
 
 extension StorageReference {
     struct DownloadURLPublisher: Publisher {
+        typealias Output = URL
+        typealias Failure = Error
         let reference: StorageReference
         func receive<S>(subscriber: S) where S : Subscriber, Self.Failure == S.Failure, Self.Output == S.Input {
             reference.downloadURL { (url, error) in
