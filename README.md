@@ -1,7 +1,5 @@
 # FirebaseImage
 
-A description of this package.
-
 ## Usage
 ```swift
 struct ContentView: View {
