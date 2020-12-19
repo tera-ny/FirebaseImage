@@ -71,14 +71,16 @@ class FirebaseImageViewModel: ObservableObject {
     }
 }
 
-public struct FirebaseImage: View {
+public struct FirebaseImage<Content>: View where Content: View {
     @ObservedObject private var viewModel: FirebaseImageViewModel
     private let placeholder: UIImage
-    public init(reference: StorageReference, useCache: Bool = true, placeholder: UIImage = .init()) {
+    private let build: (Image) -> Content
+    public init(reference: StorageReference, useCache: Bool = true, placeholder: UIImage = .init(), buildBlock: @escaping (Image) -> Content) {
         viewModel = .init(reference: reference, useCache: useCache)
         self.placeholder = placeholder
+        self.build = buildBlock
     }
-    public var body: Image {
-        Image(uiImage: viewModel.wrappedImage ?? placeholder)
+    public var body: some View {
+        build(Image(uiImage: viewModel.wrappedImage ?? placeholder))
     }
 }
