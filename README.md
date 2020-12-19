@@ -10,8 +10,11 @@
 struct ContentView: View {
     let reference: StorageReference
     var body: some View {
-        FirebaseImage(reference: reference)
-            .scaledToFill()
+        FirebaseImage(reference: Storage.storage().reference()) {
+            $0.resizable()
+                .scaledToFit()
+                .frame(width: 100)
+        }
     }
 }
 ```
