@@ -30,28 +30,29 @@ class ImageCache {
 
 class FirebaseImageViewModel: ObservableObject {
     @Published var image: Result<UIImage, Error>?
-    var disposeBag = Set<AnyCancellable>()
+    private var disposeBag = Set<AnyCancellable>()
     init(reference: StorageReference, useCache: Bool) {
         if useCache, let image = ImageCache.shared.jar[reference.fullPath] {
             self.image = .success(image)
             return
         } else {
             reference.downloadURLPublisher
-                .flatMap({ url -> AnyPublisher<Data, Error> in
+                .flatMap({ url in
                     URLSession.shared.dataTaskPublisher(for: url)
-                        .map({ $0.data })
                         .mapError({ $0 })
-                        .eraseToAnyPublisher()
                 })
                 .sink { [weak self] completion in
                     switch completion {
                     case .failure(let error):
+                        #if DEBUG
+                        print(error)
+                        #endif
                         ImageCache.shared.jar.removeValue(forKey: reference.fullPath)
                         self?.image = .failure(error)
                     default: break
                     }
-                } receiveValue: { [weak self] data in
-                    if let image = UIImage(data: data) {
+                } receiveValue: { [weak self] result in
+                    if let image = UIImage(data: result.data) {
                         ImageCache.shared.jar.updateValue(image, forKey: reference.fullPath)
                         self?.image = .success(image)
                     }
@@ -59,23 +60,25 @@ class FirebaseImageViewModel: ObservableObject {
                 .store(in: &disposeBag)
         }
     }
-    var wrappedImage: UIImage {
+    var wrappedImage: UIImage? {
         switch image {
         case .success(let image):
             return image
-        //Todo: placeholder, failed to load
+        //Todo: failed to load
         default:
-            return UIImage()
+            return nil
         }
     }
 }
 
-struct FirebaseImage: View {
-    @ObservedObject var viewModel: FirebaseImageViewModel
-    init(reference: StorageReference, useCache: Bool = true) {
+public struct FirebaseImage: View {
+    @ObservedObject private var viewModel: FirebaseImageViewModel
+    private let placeholder: UIImage
+    init(reference: StorageReference, useCache: Bool = true, placeholder: UIImage = .init()) {
         viewModel = .init(reference: reference, useCache: useCache)
+        self.placeholder = placeholder
     }
-    var body: Image {
-        Image(uiImage: viewModel.wrappedImage)
+    public var body: Image {
+        Image(uiImage: viewModel.wrappedImage ?? placeholder)
     }
 }
