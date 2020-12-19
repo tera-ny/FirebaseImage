@@ -74,7 +74,7 @@ class FirebaseImageViewModel: ObservableObject {
 public struct FirebaseImage: View {
     @ObservedObject private var viewModel: FirebaseImageViewModel
     private let placeholder: UIImage
-    init(reference: StorageReference, useCache: Bool = true, placeholder: UIImage = .init()) {
+    public init(reference: StorageReference, useCache: Bool = true, placeholder: UIImage = .init()) {
         viewModel = .init(reference: reference, useCache: useCache)
         self.placeholder = placeholder
     }
